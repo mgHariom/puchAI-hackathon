@@ -1,43 +1,31 @@
 """MCP Server Main Entry Point"""
 
 import asyncio
-import json
-import sys
-from typing import Any, Dict
+from mcp.server.stdio import stdio_server
 from mcp.server import Server
 from mcp.types import Tool, TextContent
 from .handlers.tools import ToolHandler
 from .handlers.resources import ResourceHandler
 
 
-class MCPServer:
-    def __init__(self):
-        self.server = Server("hackathon-mcp-server")
-        self.tool_handler = ToolHandler()
-        self.resource_handler = ResourceHandler()
-        self._setup_handlers()
+app = Server("hackathon-mcp-server")
+tool_handler = ToolHandler()
+resource_handler = ResourceHandler()
 
-    def _setup_handlers(self):
-        """Setup MCP protocol handlers"""
-        
-        @self.server.list_tools()
-        async def list_tools() -> list[Tool]:
-            return self.tool_handler.get_available_tools()
 
-        @self.server.call_tool()
-        async def call_tool(name: str, arguments: Dict[str, Any]) -> list[TextContent]:
-            return await self.tool_handler.call_tool(name, arguments)
+@app.list_tools()
+async def list_tools() -> list[Tool]:
+    return tool_handler.get_available_tools()
 
-    async def run(self):
-        """Run the MCP server"""
-        async with self.server.run_stdio() as streams:
-            await streams.read_loop()
+
+@app.call_tool()
+async def call_tool(name: str, arguments: dict) -> list[TextContent]:
+    return await tool_handler.call_tool(name, arguments)
 
 
 async def main():
-    """Main entry point"""
-    server = MCPServer()
-    await server.run()
+    async with stdio_server() as (read_stream, write_stream):
+        await app.run(read_stream, write_stream, app.create_initialization_options())
 
 
 if __name__ == "__main__":

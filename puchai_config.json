@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "bus-route-server": {
+      "command": "python",
+      "args": ["-m", "src.mcp_server.server"],
+      "cwd": "e:/Dev_projects/Ai/puchAI-hackathon",
+      "env": {}
+    }
+  }
+}
